@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -43,10 +44,15 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 );
                 authentication.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                LOGGER.debug("Roles from JWT: {}",userDetails.getAuthorities());
             }
         }
-        catch (Exception e)
-
+        catch (Exception e){
+            logger.error("Cannot save user authentication: {}",e);
+        }
+        filterChain.doFilter(request,response);
     }
 
     private String parseJwt(HttpServletRequest request) {
