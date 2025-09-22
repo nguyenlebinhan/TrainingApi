@@ -1,6 +1,7 @@
 package com.example.TrainingAPI.security.services;
 
 import com.example.TrainingAPI.model.User;
+import com.example.TrainingAPI.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
