@@ -1,24 +1,31 @@
 package com.example.TrainingAPI.controller;
 
+import com.example.TrainingAPI.model.AppRole;
+import com.example.TrainingAPI.model.Role;
+import com.example.TrainingAPI.model.User;
+import com.example.TrainingAPI.repository.UserRepository;
 import com.example.TrainingAPI.security.jwt.JwtUtils;
-import com.example.TrainingAPI.security.jwt.LoginRequest;
-import com.example.TrainingAPI.security.jwt.LoginResponse;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import com.example.TrainingAPI.security.request.LoginRequest;
+import com.example.TrainingAPI.security.request.SignupRequest;
+import com.example.TrainingAPI.security.response.MessageResponse;
+import com.example.TrainingAPI.security.response.UserInfoResponse;
+import com.example.TrainingAPI.security.services.UserDetailsImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.naming.AuthenticationException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class AuthController {
 
@@ -28,12 +35,21 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    RoleRepository roleRepository;
+
     @PostMapping("/signin")
     public ResponseEntity<?>authenticateUser(@RequestBody LoginRequest loginRequest){
         Authentication authentication;
         try{
             authentication = authenticationManager
-                    .authenticate(new UsernamePasswordAuthenticationToken(loginRequest));
+                    .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),loginRequest.getPassword()));
         }catch (AuthenticationException exception){
             Map<String,Object> map =new HashMap<>();
             map.put("message","Bad credentials");
@@ -42,15 +58,42 @@ public class AuthController {
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserDetails userDetails = (UserDetails) authentication.getPrinCipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         String jwtToken = jwtUtils.generateTokenFromUserName(userDetails);
 
         List<String> roles =userDetails.getAuthorities().stream().map(
-                item->item.getAuthority())
-                .collect(Collectors.toList());
+                        GrantedAuthority::getAuthority)
+                .toList();
 
-        LoginResponse response = new LoginResponse(userDetails.getUsername(), );
+        UserInfoResponse response = new UserInfoResponse(userDetails.getId(), jwtToken,userDetails.getUsername(), roles);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?>registerUser(@RequestBody @Valid SignupRequest signupRequest){
+        if(userRepository.existsByUserName(signupRequest.getUsername())){
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken"));
+        }
+
+        if(userRepository.existsByEmail(signupRequest.getEmail()) ){
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already taken"));
+        }
+
+        User user = new User(
+                signupRequest.getUsername(),
+                signupRequest.getEmail(),
+                passwordEncoder.encode(signupRequest.getPassword())
+        );
+        Set<String> strRoles= signupRequest.getRoles();
+        Set<Role> roles = new HashSet<>();
+        if(strRoles == null) {
+            Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
+            roles.add(userRole);
+        }else{
+            //admin --> ROLE_ADMIN
+            //seller --> ROLE_SELLER
+        }
     }
 }

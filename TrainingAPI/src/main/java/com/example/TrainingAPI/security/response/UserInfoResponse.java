@@ -1,4 +1,4 @@
-package com.example.TrainingAPI.security.jwt;
+package com.example.TrainingAPI.security.response;
 
 
 import lombok.AllArgsConstructor;
@@ -9,9 +9,11 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-public class LoginResponse {
+public class UserInfoResponse {
+    private Long id;
     private String jwtToken;
-
     private String username;
     private List<String> roles;
+
+
 }
