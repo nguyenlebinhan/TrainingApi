@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthEntryPointJwt.class);
