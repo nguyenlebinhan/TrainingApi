@@ -3,6 +3,7 @@ package com.example.TrainingAPI.controller;
 import com.example.TrainingAPI.model.AppRole;
 import com.example.TrainingAPI.model.Role;
 import com.example.TrainingAPI.model.User;
+import com.example.TrainingAPI.repository.RoleRepository;
 import com.example.TrainingAPI.repository.UserRepository;
 import com.example.TrainingAPI.security.jwt.JwtUtils;
 import com.example.TrainingAPI.security.request.LoginRequest;
@@ -24,9 +25,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 
+@RestController
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
@@ -91,9 +96,31 @@ public class AuthController {
             Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
             roles.add(userRole);
-        }else{
+        }else {
             //admin --> ROLE_ADMIN
             //seller --> ROLE_SELLER
+            strRoles.forEach(role -> {
+                switch (role) {
+                    case "admin":
+                        Role adminRole = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
+                        roles.add(adminRole);
+                        break;
+                    case "seller":
+                        Role sellerRole = roleRepository.findByRoleName(AppRole.ROLE_SELLER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
+                        roles.add(sellerRole); // Bị thiếu dòng này
+                        break;
+                    default:
+                        Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found"));
+                        roles.add(userRole);
+                        break;
+                }
+            });
         }
+        user.setRoles(roles);
+        userRepository.save(user);
+        return ResponseEntity.ok(new MessageResponse("User registered successfully"));
     }
 }
