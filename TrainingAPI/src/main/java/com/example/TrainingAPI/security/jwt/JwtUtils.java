@@ -1,14 +1,17 @@
 package com.example.TrainingAPI.security.jwt;
 
+import com.example.TrainingAPI.security.services.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.WebUtils;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
@@ -26,21 +29,54 @@ public class JwtUtils {
     @Value("${spring.app.jwtSecret}")
     private String jwtSecret;
 
-    public String getJwtFromHeader(HttpServletRequest request){
-        String bearerToken = request.getHeader("Authorization");
-        LOGGER.debug("Authorization Header: {}", bearerToken);
-        if(bearerToken != null && bearerToken.startsWith("Bearer ")){
-            return bearerToken.substring(7);// Remove Bearer to get the token
+    @Value("${spring.app.jwtCookieName}")
+    private String jwtCookie;
 
+
+//    public String getJwtFromHeader(HttpServletRequest request){
+//        String bearerToken = request.getHeader("Authorization");
+//        LOGGER.debug("Authorization Header: {}", bearerToken);
+//        if(bearerToken != null && bearerToken.startsWith("Bearer ")){
+//            return bearerToken.substring(7);// Remove Bearer to get the token
+//
+//        }
+//        return null;
+//    }
+
+    public String getJwtFromCookies(HttpServletRequest request){
+        Cookie cookie = WebUtils.getCookie(request,jwtCookie);
+        if(cookie != null ){
+            System.out.println("COOKIE: "+cookie.getValue());
+            return cookie.getValue();
+        }else {
+            return null;
         }
-        return null;
     }
+
+    public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal){
+        String jwt = generateTokenFromUserName(userPrincipal.getUsername());
+        ResponseCookie cookie = ResponseCookie.from(jwtCookie,jwt)
+                .path("/api")
+                .maxAge(24*60*60)
+                .httpOnly(false)
+                .build();
+        return cookie;
+    }
+
+    public ResponseCookie getCleanJwtCookie(){
+        ResponseCookie cookie = ResponseCookie.from(jwtCookie,"null")
+                .path("/api")
+                .maxAge(24*60*60)
+                .httpOnly(false)
+                .build();
+        return cookie;
+    }
+
     // Generate Token from Username
 
-    public String generateTokenFromUserName(UserDetails userDetails){
-        String userName = userDetails.getUsername();
+    public String generateTokenFromUserName(String username){
         return Jwts.builder()
-                .subject(userName)
+                .subject(username)
                 .issuedAt(new Date())
                 .expiration( new Date((new Date().getTime() + jwtExpirationMs)))
                 .signWith(key())

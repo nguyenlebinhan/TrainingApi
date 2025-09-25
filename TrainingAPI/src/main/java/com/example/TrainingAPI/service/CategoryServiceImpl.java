@@ -54,6 +54,7 @@ public class CategoryServiceImpl implements CategoryService{
     @Override
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
         Category category = modelMapper.map(categoryDTO, Category.class);
+        category.setCategoryId(null);
         Category CategoryFromDB = categoryRepository.findByCategoryName(category.getCategoryName());
         if(CategoryFromDB !=null){
             throw new APIException("Category with the name "+category.getCategoryName()+" already exists");
