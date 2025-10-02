@@ -74,7 +74,7 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
-    public String deleteAddresses(Long addressId) {
+    public String deleteAddress(Long addressId) {
         Address addressFromDB = addressRepository.findById(addressId)
                 .orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
 
@@ -83,7 +83,8 @@ public class AddressServiceImpl implements AddressService {
         userRepository.saveAll(users);
 
         addressRepository.delete(addressFromDB);
-        return "Deleted Successfully";
+        return "Address deleted successfully with addressId: "+addressId;
     }
+
 
 }
