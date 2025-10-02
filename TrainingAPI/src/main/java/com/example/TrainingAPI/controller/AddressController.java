@@ -30,15 +30,28 @@ public class AddressController {
     }
     @GetMapping("/addresses")
     public ResponseEntity<List<AddressDTO>>getAllAddress(){
-        User user = authUtil.loggedInUser();
         List<AddressDTO> addressDTOs = addressService.getAllAddress();
         return new ResponseEntity<>(addressDTOs,HttpStatus.OK);
     }
 
     @GetMapping("/addresses/{addressId}")
-    public ResponseEntity<AddressDTO> getSpecificAddress(@PathVariable Long addressId){
+    public ResponseEntity<AddressDTO> getAddressesById(@PathVariable Long addressId){
         AddressDTO addressDTO = addressService.getAddressesById(addressId);
         return new ResponseEntity<>(addressDTO,HttpStatus.OK);
+    }
+
+    @GetMapping("/user/addresses")
+    public ResponseEntity<List<AddressDTO>> getAddressesByUserId(){
+        User user = authUtil.loggedInUser();
+        List<AddressDTO>addressDTOs= addressService.getAddressesByUserId(user);
+        return new ResponseEntity<>(addressDTOs,HttpStatus.OK);
+    }
+
+    @PutMapping("/user/addresses/{addressId}")
+    public ResponseEntity<AddressDTO> updateAddresses(@Valid @RequestBody AddressDTO addressDTO,
+                                                  @PathVariable Long addressId){
+        AddressDTO address = addressService.updateAddresses(addressDTO,addressId);
+        return new ResponseEntity<>(address,HttpStatus.OK);
     }
 
 }

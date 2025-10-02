@@ -49,4 +49,20 @@ public class AddressServiceImpl implements AddressService {
         return modelMapper.map(searchAddress, AddressDTO.class);
 
     }
+
+    @Override
+    public List<AddressDTO> getAddressesByUserId(User user) {
+        List<Address> addresses = user.getAddresses();
+        return addresses.stream().map(address -> modelMapper.map(address, AddressDTO.class)).toList();
+    }
+
+    @Override
+    public AddressDTO updateAddresses(AddressDTO addressDTO, Long addressId) {
+        Address address = modelMapper.map(addressDTO, Address.class);
+        Address addressFromDB = addressRepository.findById(addressId)
+                .orElseThrow(()-> new ResourceNotFoundException("Address","addressId",addressId));
+        address.setAddressId(addressFromDB.getAddressId());
+        addressFromDB = addressRepository.save(address);
+        return modelMapper.map(addressFromDB, AddressDTO.class);
+    }
 }
