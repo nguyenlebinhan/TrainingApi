@@ -5,6 +5,8 @@ import com.example.TrainingAPI.model.Address;
 import com.example.TrainingAPI.model.User;
 import com.example.TrainingAPI.payload.AddressDTO;
 import com.example.TrainingAPI.repository.AddressRepository;
+import com.example.TrainingAPI.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,9 @@ public class AddressServiceImpl implements AddressService {
 
     @Autowired
     AddressRepository addressRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Override
     public AddressDTO createAddress(AddressDTO addressDTO, User user) {
@@ -65,4 +70,20 @@ public class AddressServiceImpl implements AddressService {
         addressFromDB = addressRepository.save(address);
         return modelMapper.map(addressFromDB, AddressDTO.class);
     }
+
+
+    @Override
+    @Transactional
+    public String deleteAddresses(Long addressId) {
+        Address addressFromDB = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address", "addressId", addressId));
+
+        List<User> users = addressFromDB.getUsers();
+        users.forEach(user -> user.getAddresses().remove(addressFromDB));
+        userRepository.saveAll(users);
+
+        addressRepository.delete(addressFromDB);
+        return "Deleted Successfully";
+    }
+
 }
