@@ -1,5 +1,6 @@
 package com.example.TrainingAPI.service;
 
+import com.example.TrainingAPI.exceptions.ResourceNotFoundException;
 import com.example.TrainingAPI.model.Address;
 import com.example.TrainingAPI.model.User;
 import com.example.TrainingAPI.payload.AddressDTO;
@@ -33,5 +34,19 @@ public class AddressServiceImpl implements AddressService {
         Address saveAddress = addressRepository.save(address);
 
         return modelMapper.map(saveAddress,AddressDTO.class);
+    }
+
+    @Override
+    public List<AddressDTO> getAllAddress() {
+        List<Address> addresses = addressRepository.findAll();
+        return addresses.stream().map(address->modelMapper.map(address, AddressDTO.class)).toList();
+    }
+
+    @Override
+    public AddressDTO getAddressesById(Long addressId) {
+        Address searchAddress = addressRepository.findById(addressId)
+                .orElseThrow(()->new ResourceNotFoundException("Address","addressId",addressId));
+        return modelMapper.map(searchAddress, AddressDTO.class);
+
     }
 }

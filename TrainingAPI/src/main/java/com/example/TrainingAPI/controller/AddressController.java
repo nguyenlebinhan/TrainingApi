@@ -8,10 +8,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequestMapping("/api")
 @RestController
@@ -29,4 +28,17 @@ public class AddressController {
         AddressDTO savedAddressDTO = addressService.createAddress(addressDTO,user);
         return new ResponseEntity<>(savedAddressDTO, HttpStatus.CREATED);
     }
+    @GetMapping("/addresses")
+    public ResponseEntity<List<AddressDTO>>getAllAddress(){
+        User user = authUtil.loggedInUser();
+        List<AddressDTO> addressDTOs = addressService.getAllAddress();
+        return new ResponseEntity<>(addressDTOs,HttpStatus.OK);
+    }
+
+    @GetMapping("/addresses/{addressId}")
+    public ResponseEntity<AddressDTO> getSpecificAddress(@PathVariable Long addressId){
+        AddressDTO addressDTO = addressService.getAddressesById(addressId);
+        return new ResponseEntity<>(addressDTO,HttpStatus.OK);
+    }
+
 }
