@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -120,7 +119,7 @@ public class CartServiceImpl implements CartService{
             throw new APIException("No carts exists");
         }
 
-        List<CartDTO> cartDTOs = carts.stream()
+        return carts.stream()
                 .map(cart ->{
                     CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
                     List<ProductDTO> products = cart.getCartItems().stream().map(
@@ -134,7 +133,6 @@ public class CartServiceImpl implements CartService{
                     cartDTO.setProducts(products);
                     return cartDTO;
                 }).toList();
-        return cartDTOs;
     }
 
     @Override
